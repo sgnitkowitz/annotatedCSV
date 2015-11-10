@@ -2,6 +2,7 @@ package de.semlink.csv;
 
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ public class CSVReader<T> {
 	private Class<T> c;
 	private Scanner scanner;
 	private CSVEntity csvEntity;
+	private Map<Integer, String> superColumnToFieldMap;
 	private Map<Integer, String> columnToFieldMap;
 
 	private CSVReader(Class<T> c) {
@@ -31,6 +33,7 @@ public class CSVReader<T> {
 	public List<T> readCSV(InputStream in) {
 		try {
 			csvEntity = getCsvEntity();
+			superColumnToFieldMap = getSuperColumnToFieldMap();
 			columnToFieldMap = getColumnToFieldMap();
 			scanner = new Scanner(in);
 
@@ -54,7 +57,7 @@ public class CSVReader<T> {
 
 	private Map<Integer, String> getColumnToFieldMap() {
 		Map<Integer, String> map = new HashMap<>();
-		int currentColumn = 0;
+		int currentColumn = 0 + superColumnToFieldMap.size();
 
 		for (Field field : c.getDeclaredFields()) {
 			if (field.isAnnotationPresent(CSVItem.class)) {
@@ -69,6 +72,27 @@ public class CSVReader<T> {
 			}
 		}
 
+		return map;
+	}
+
+	private Map<Integer, String> getSuperColumnToFieldMap() {
+		// TODO optimize
+		Map<Integer, String> map = new HashMap<>();
+		int currentColumn = 0;
+		
+		for (Field field : c.getSuperclass().getDeclaredFields()) {
+			if (field.isAnnotationPresent(CSVItem.class)) {
+				CSVItem csvItem = field.getAnnotation(CSVItem.class);
+				int rowNumber = csvItem.columnNumber();
+				
+				if (rowNumber >= 0) {
+					map.put(rowNumber, field.getName());
+				} else {
+					map.put(currentColumn++, field.getName());
+				}
+			}
+		}
+		
 		return map;
 	}
 
@@ -115,7 +139,16 @@ public class CSVReader<T> {
 		for (int i = 0; i < cells.length; i++) {
 			try {
 				String cell = cells[i];
-				Field field = entity.getClass().getDeclaredField(columnToFieldMap.get(i));
+				
+				String fieldName = superColumnToFieldMap.get(i);
+				Field field;
+				if (fieldName == null) {
+					fieldName = columnToFieldMap.get(i);
+					field = entity.getClass().getDeclaredField(fieldName);
+				} else {
+					field = entity.getClass().getSuperclass().getDeclaredField(fieldName);
+				}
+				
 				field.setAccessible(true);
 
 				if (field.isAnnotationPresent(TypeReader.class)) {
@@ -144,6 +177,8 @@ public class CSVReader<T> {
 			o = Float.parseFloat(cell);
 		} else if (c.equals(Boolean.class)) {
 			o = Boolean.parseBoolean(cell);
+		} else if (c.equals(BigInteger.class)) {
+			o = new BigInteger(cell);
 		} else {
 			o = cell;
 		}

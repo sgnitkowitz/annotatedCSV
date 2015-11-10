@@ -1,5 +1,12 @@
 package de.semlink.csv.test;
 
+//import java.io.InputStream;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+//import java.util.List;
+//
+//import de.semlink.csv.CSVReader;
+
 public class CSVReaderTest {
 
 	public static void main(String[] args) {

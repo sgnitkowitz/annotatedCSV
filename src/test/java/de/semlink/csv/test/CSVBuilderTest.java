@@ -1,5 +1,14 @@
 package de.semlink.csv.test;
 
+//import java.io.OutputStream;
+//import java.nio.file.Files;
+//import java.nio.file.Paths;
+//import java.util.ArrayList;
+//import java.util.Date;
+//import java.util.List;
+//
+//import de.semlink.csv.CSVBuilder;
+
 public class CSVBuilderTest {
 
 	public static void main(String[] args) {
@@ -7,6 +16,7 @@ public class CSVBuilderTest {
 //		
 //		for (int i = 0; i < 100; i++) {
 //			TestEntity t = new TestEntity();
+//			t.setRootId((long) i);
 //			t.setId((long) i);
 //			t.setFirstName("fist" + i);
 //			t.setLastName("last" + i);

@@ -28,15 +28,15 @@ public class CSVBuilder {
 			if (csvEntities.size() == 0) {
 				return;
 			}
-			
+
 			csvEntity = getCsvEntity(csvEntities.get(0));
 			columns = getTotalColumn(csvEntities.get(0));
 			writer = new PrintWriter(out);
-			
+
 			if (csvEntity.writeHeader()) {
 				writeLine(getHeader(csvEntities.get(0)));
 			}
-			
+
 			writeLines(csvEntities);
 		} finally {
 			cleanBuilder();
@@ -47,12 +47,19 @@ public class CSVBuilder {
 		if (o.getClass().isAnnotationPresent(CSVEntity.class)) {
 			return o.getClass().getAnnotation(CSVEntity.class);
 		}
-	
+
 		throw new NoCSVEntityException();
 	}
 
 	private int getTotalColumn(Object o) {
 		int columns = 0;
+
+		// TODO optimize
+		for (Field field : o.getClass().getSuperclass().getDeclaredFields()) {
+			if (field.isAnnotationPresent(CSVItem.class)) {
+				columns++;
+			}
+		}
 
 		for (Field field : o.getClass().getDeclaredFields()) {
 			if (field.isAnnotationPresent(CSVItem.class)) {
@@ -66,6 +73,30 @@ public class CSVBuilder {
 	private String[] getHeader(Object o) {
 		String[] header = new String[columns];
 		int currentColumn = 0;
+
+		// TODO optimize
+		for (Field field : o.getClass().getSuperclass().getDeclaredFields()) {
+			if (field.isAnnotationPresent(CSVItem.class)) {
+				CSVItem csvItem = field.getAnnotation(CSVItem.class);
+
+				String rowName = csvItem.columnName();
+				int rowNumber = csvItem.columnNumber();
+
+				if (rowNumber >= 0) {
+					if (rowName.isEmpty()) {
+						header[rowNumber] = field.getName();
+					} else {
+						header[rowNumber] = rowName;
+					}
+				} else {
+					if (rowName.isEmpty()) {
+						header[currentColumn++] = field.getName();
+					} else {
+						header[currentColumn++] = rowName;
+					}
+				}
+			}
+		}
 
 		for (Field field : o.getClass().getDeclaredFields()) {
 			if (field.isAnnotationPresent(CSVItem.class)) {
@@ -96,6 +127,33 @@ public class CSVBuilder {
 	private String[] getLine(Object o) {
 		String[] line = new String[columns];
 		int currentColumn = 0;
+
+		// TODO optimize
+		for (Field field : o.getClass().getSuperclass().getDeclaredFields()) {
+			if (field.isAnnotationPresent(CSVItem.class)) {
+				try {
+					field.setAccessible(true);
+					Object value;
+					if (field.isAnnotationPresent(TypeWriter.class)) {
+						Class<? extends ITypeWriter> typeReaderClass = field.getAnnotation(TypeWriter.class).typeWriter();
+						value = typeReaderClass.newInstance().write(field.get(o));
+					} else {
+						value = field.get(o);
+					}
+					CSVItem csvItem = field.getAnnotation(CSVItem.class);
+					int rowNumber = csvItem.columnNumber();
+
+					if (rowNumber >= 0) {
+						line[rowNumber] = String.valueOf(value);
+					} else {
+						line[currentColumn++] = String.valueOf(value);
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 
 		for (Field field : o.getClass().getDeclaredFields()) {
 			if (field.isAnnotationPresent(CSVItem.class)) {
@@ -131,7 +189,7 @@ public class CSVBuilder {
 			String[] line = getLine(o);
 			writeLine(line);
 		}
-		
+
 		writer.flush();
 	}
 

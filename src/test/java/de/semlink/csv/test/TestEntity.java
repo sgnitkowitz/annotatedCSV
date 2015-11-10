@@ -10,7 +10,7 @@ import de.semlink.csv.test.reader.DateTypeReader;
 import de.semlink.csv.test.writer.DateTypeWriter;
 
 @CSVEntity
-public class TestEntity {
+public class TestEntity extends RootEntity {
 
 	@CSVItem
 	private Long id;
@@ -57,7 +57,7 @@ public class TestEntity {
 
 	@Override
 	public String toString() {
-		return "TestEntity [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", date=" + date + "]";
+		return "TestEntity [rootId=" + rootId + ", id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", date=" + date + "]";
 	}
 
 }
