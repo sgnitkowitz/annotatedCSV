@@ -167,15 +167,15 @@ public class CSVReader<T> {
 	private Object cellToSimpleObject(Class<?> c, String cell) {
 		Object o;
 
-		if (c.equals(Long.class)) {
+		if (c.equals(Long.class) || c.equals(long.class)) {
 			o = Long.parseLong(cell);
-		} else if (c.equals(Integer.class)) {
+		} else if (c.equals(Integer.class) || c.equals(int.class)) {
 			o = Integer.parseInt(cell);
-		} else if (c.equals(Double.class)) {
+		} else if (c.equals(Double.class) || c.equals(double.class)) {
 			o = Double.parseDouble(cell);
-		} else if (c.equals(Float.class)) {
+		} else if (c.equals(Float.class) || c.equals(float.class)) {
 			o = Float.parseFloat(cell);
-		} else if (c.equals(Boolean.class)) {
+		} else if (c.equals(Boolean.class) || c.equals(boolean.class)) {
 			o = Boolean.parseBoolean(cell);
 		} else if (c.equals(BigInteger.class)) {
 			o = new BigInteger(cell);
